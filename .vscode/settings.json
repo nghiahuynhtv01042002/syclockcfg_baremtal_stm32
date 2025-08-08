@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "system.h": "c",
+        "cstdint": "cpp",
+        "sysclocks.h": "c"
+    }
+}
