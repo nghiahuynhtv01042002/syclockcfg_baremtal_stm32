@@ -2,7 +2,7 @@
 
 uint32_t SystemCoreClock = 96000000ul;
 
-void SystemClock_Config(void) {
+void SystemClockConfig(void) {
     // Enable HSE 
     RCC_CR |= RCC_CR_HSEON;
     while(!(RCC_CR & RCC_CR_HSERDY)); 
@@ -51,15 +51,16 @@ void SystemClock_Config(void) {
     // Wait for PLL to be used as system clock
     while((RCC_CFGR & RCC_SWS_MASK) != RCC_SWS_PLL);
     // Update SystemCoreClock variable
-    SystemCoreClock = 96000000ul;
+    // SystemCoreClock = 96000000ul;
+    SystemCoreClockUpdate();
 }
 /*
-    this function is Config MCO to debug the sysclock but my logic analysis is a failure.
-    Hence, i have to write and delay function to see the logic in GPIO 
-
+    Configure MCO pins for debugging system clock.
+    However, the logic analyzer failed to capture the signal correctly,
+    so I added delay functions and monitored the clock via GPIO toggling.
 */
 
-void config_MCO(void) {
+void Config_MCO(void) {
     // Enable clock for GPIOA and GPIOC
     RCC_AHB1ENR |= RCC_AHB1ENR_GPIOA_EN | RCC_AHB1ENR_GPIOC_EN;
     
@@ -86,4 +87,41 @@ void config_MCO(void) {
     RCC_CFGR &= ~((0x3 << 30) | (0x7 << 27));  
     // SYSCLK source, /5 prescaler
     RCC_CFGR |= (0x0 << 30) | (0x6 << 27);    
+}
+void SystemCoreClockUpdate(void) {
+    uint32_t pll_m, pll_n, pll_p;
+    uint32_t sysclk;
+    switch (RCC_CFGR & 0x03) {
+        case 0: // HSI
+            sysclk = 16000000ul;
+            break;
+        case 1: // HSE
+            sysclk = 8000000ul;
+            break;
+        case 2:
+            pll_m = RCC_PLLCFGR  & 0x3F;
+            pll_n = (RCC_PLLCFGR  >> 6) & 0x1FF;
+            pll_p = (RCC_PLLCFGR  >> 16) & 0x03;
+            pll_p = 2 * (pll_p + 1);
+            // HSE is clock source
+            if (RCC_PLLCFGR  & (1 << 22)) {
+                sysclk = 8000000ul;
+            }
+            // HSi is clock source
+            else {
+                sysclk = 16000000ul;
+            }
+            //  compute SystemCoreClock
+            sysclk = (sysclk / pll_m) * pll_n / pll_p;
+            break;
+        default:
+            sysclk = 16000000ul;
+            break;
+    }
+    if(((RCC_CFGR >> 4) & 0x0F) > 8) {
+        SystemCoreClock = sysclk >> ((RCC_CFGR >> 4) & 0x0F);
+    }
+    else {
+        SystemCoreClock = sysclk;
+    }
 }

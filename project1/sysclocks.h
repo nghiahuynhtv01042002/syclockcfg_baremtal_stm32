@@ -55,8 +55,8 @@
 #define GPIOC_MODER (*(volatile uint32_t *)(GPIOC_BASE + 0x00))
 #define GPIOC_AFRH (*(volatile uint32_t *)(GPIOC_BASE + 0x24))
 
-
 extern uint32_t SystemCoreClock;
-extern void SystemClock_Config(void);
-extern void config_MCO(void);
+extern void SystemClockConfig(void);
+extern void Config_MCO(void);
+extern void SystemCoreClockUpdate(void);
 #endif

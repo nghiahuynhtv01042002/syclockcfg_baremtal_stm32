@@ -17,22 +17,20 @@ static inline void delay_ms(uint32_t ms) {
     );
 }
 
-extern void config_MCO(void);
+extern void Config_MCO(void);
 int main(void) {
     // init sysclock
-    SystemClock_Config();
+    SystemClockConfig();
     // config MCO
-    config_MCO();
+    Config_MCO();
     // Enable clock for GPIOD
     RCC_AHB1ENR |= RCC_AHB1ENR_GPIOD_EN;
-
     // Set PD12 as output (10)
     GPIOD_MODER |= (1 << 26);
     GPIOD_MODER &= ~(1 <<27);
-    
-    while (1) {
+    for(;;) {
         // Toggle PD12
         GPIOD_ODR ^= (1 << 13);
-        delay_ms(2000);
+        delay_ms(1000);
     }
 }
